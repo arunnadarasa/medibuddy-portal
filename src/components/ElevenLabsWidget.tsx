@@ -1,7 +1,12 @@
+
 import { useEffect, useRef } from "react";
 
-function ElevenLabsWidget({ userId }) {
-  const widgetContainerRef = useRef(null);
+interface ElevenLabsWidgetProps {
+  userId: string;
+}
+
+function ElevenLabsWidget({ userId }: ElevenLabsWidgetProps): JSX.Element {
+  const widgetContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!userId) {
@@ -38,11 +43,10 @@ function ElevenLabsWidget({ userId }) {
       };
       document.body.appendChild(script);
     }
-  }, [userId]); // Only re-run if userId changes
+  }, [userId]);
 
   return (
     <div ref={widgetContainerRef}>
-      {/* The custom ElevenLabs element - greg-oteOQYnH3OJ7l5JGpdPT - raph-8pkVgwjpCRqjsfbGte5P*/}
       <elevenlabs-convai agent-id="oteOQYnH3OJ7l5JGpdPT"></elevenlabs-convai>
     </div>
   );

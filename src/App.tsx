@@ -1,3 +1,4 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,11 +13,11 @@ import { useSupabaseUser } from "./hooks/useSupabaseUser";
 
 const queryClient = new QueryClient();
 
-const App = () => {
+const App = (): JSX.Element => {
   const { user, loading } = useSupabaseUser();
 
   if (loading) {
-    return <div>Loading...</div>; // Show loading message while fetching user data
+    return <div>Loading...</div>;
   }
 
   return (
