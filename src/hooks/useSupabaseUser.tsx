@@ -6,21 +6,37 @@ export const useSupabaseUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    console.log("useSupabaseUser");
+    console.log("useSupabaseUser - Initial Fetch");
+
     const fetchUser = async () => {
       const {
         data: { session },
       } = await supabase.auth.getSession();
 
+      console.log("Initial session:", session);
+
       if (session) {
-        setUser(session.user); // Store the user object
+        setUser(session.user);
       }
 
       setLoading(false);
     };
 
     fetchUser();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth state changed:", session);
+      setUser(session?.user || null);
+    });
+
+    return () => {
+      subscription.unsubscribe(); // Cleanup on unmount
+    };
   }, []);
 
+  console.log("Returning user:", user);
   return { user, loading };
 };
