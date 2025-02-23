@@ -47,7 +47,7 @@ function ElevenLabsWidget({ userId }: ElevenLabsWidgetProps): JSX.Element {
 
   return (
     <div ref={widgetContainerRef}>
-      <elevenlabs-convai agent-id="oteOQYnH3OJ7l5JGpdPT"></elevenlabs-convai>
+      <elevenlabs-convai agent-id="8pkVgwjpCRqjsfbGte5P"></elevenlabs-convai>
     </div>
   );
 }
