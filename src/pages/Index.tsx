@@ -2,6 +2,10 @@
 import { InfoCard } from "@/components/InfoCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
 
 interface Profile {
   first_name: string;
@@ -37,6 +41,8 @@ const Index = () => {
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -92,6 +98,20 @@ const Index = () => {
     fetchData();
   }, []);
 
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut();
+      navigate('/auth');
+    } catch (error) {
+      console.error('Error signing out:', error);
+      toast({
+        variant: "destructive",
+        title: "Error signing out",
+        description: "Please try again",
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -102,6 +122,17 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <div className="absolute top-4 right-4">
+        <Button
+          variant="ghost"
+          onClick={handleSignOut}
+          className="flex items-center gap-2"
+        >
+          <LogOut className="h-4 w-4" />
+          Sign out
+        </Button>
+      </div>
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         <div className="text-center mb-12 animate-fadeIn">
           <h1 className="text-4xl font-semibold text-gray-900 mb-2">
