@@ -3,7 +3,8 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.7.1";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Headers":
+    "authorization, x-client-info, apikey, content-type",
 };
 
 serve(async (req) => {
@@ -14,79 +15,74 @@ serve(async (req) => {
   try {
     console.log("Agent requesting user data...");
 
-    // 🚨 Require POST Method (GET won't have a request body)
-    if (req.method !== "POST") {
-      throw new Error("Invalid request method. Use POST instead.");
-    }
-
-    // 🚨 Extract Authorization header
-    const authHeader = req.headers.get("Authorization");
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      throw new Error("Unauthorized: Missing Bearer token");
-    }
-
-    const jwt = authHeader.replace("Bearer ", "");
-
-    // 🚨 Validate the Bearer token using Supabase
+    // Get environment variables
     const supabaseUrl = Deno.env.get("SUPABASE_URL");
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
-    if (!supabaseUrl || !supabaseAnonKey) {
-      throw new Error("Supabase environment variables are missing.");
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error("Missing Supabase environment variables");
     }
 
-    const supabase = createClient(supabaseUrl, supabaseAnonKey);
-    const { data: { user }, error } = await supabase.auth.getUser(jwt);
+    // Create Supabase client
+    const supabase = createClient(supabaseUrl, supabaseKey);
 
-    if (error || !user) {
-      throw new Error("Unauthorized: Invalid JWT token.");
-    }
-
-    console.log(`Authenticated user: ${user.id}`);
-
-    // 🚨 Read request body
-    const { user_id } = await req.json();
+    // 🚨 Extract `user_id` from the **URL path**
+    const url = new URL(req.url);
+    const pathParts = url.pathname.split("/"); // Split by `/`
+    const user_id = pathParts[pathParts.length - 1]; // Get the last part of the path
 
     if (!user_id) {
-      throw new Error("Missing user_id in request.");
+      throw new Error("Missing user_id in request URL path");
     }
 
     console.log(`Processing request for user_id: ${user_id}`);
 
-    // Call `put-user-data` securely using a service role key
-    const response = await fetch(`${supabaseUrl}/functions/v1/put-user-data`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`, // Secure internal call
-      },
-      body: JSON.stringify({ user_id }),
-    });
+    // 🚨 Authenticate the request using the Anon Key
+    const authHeader = req.headers.get("Authorization");
 
-    const userData = await response.json();
-
-    if (!response.ok) {
-      throw new Error(`Failed to get user data: ${userData.error}`);
+    if (!authHeader) {
+      throw new Error("Unauthorized: Missing Authorization header");
     }
 
-    return new Response(
-      JSON.stringify(userData),
-      {
-        headers: { 
-          ...corsHeaders, 
-          "Content-Type": "application/json",
-        }
-      }
-    );
+    const jwt = authHeader.replace("Bearer ", "");
 
+    const {
+      data: { user },
+      error: authError,
+    } = await supabase.auth.getUser(jwt);
+
+    if (authError || !user) {
+      console.error("Auth error:", authError);
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Invalid token" }),
+        {
+          status: 401,
+          headers: { ...corsHeaders, "Content-Type": "application/json" },
+        }
+      );
+    }
+
+    console.log(`Authenticated user: ${user.id}`);
+
+    // 🚨 Query user-related data
+    const { data: userProfile, error: profileError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user_id)
+      .single();
+
+    if (profileError) {
+      throw profileError;
+    }
+
+    return new Response(JSON.stringify({ userProfile }), {
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   } catch (error) {
     console.error("Function error:", error.message);
-    return new Response(
-      JSON.stringify({ error: error.message }),
-      { 
-        status: error.message.includes("Unauthorized") ? 401 : 400,
-        headers: { ...corsHeaders, "Content-Type": "application/json" }
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: error.message.includes("Unauthorized") ? 401 : 400,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 });

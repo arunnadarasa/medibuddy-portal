@@ -34,8 +34,8 @@ function ElevenLabsWidget({ userId }: ElevenLabsWidgetProps): JSX.Element {
           const widget =
             widgetContainerRef.current?.querySelector("elevenlabs-convai");
           if (widget) {
-            widget.setAttribute("context", JSON.stringify({ user_id: userId }));
-            console.log("Agent context set:", { user_id: userId });
+            widget.setAttribute("context", JSON.stringify({ context_user_id: userId }));
+            console.log("Agent context set:", { context_user_id: userId });
           } else {
             console.error("ElevenLabs Widget: Could not find widget element.");
           }
