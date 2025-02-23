@@ -1,4 +1,3 @@
-
 import { InfoCard } from "@/components/InfoCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
@@ -39,7 +38,7 @@ interface Prescription {
 interface RefillRequest {
   id: string;
   prescription_id: string;
-  status: 'pending' | 'approved' | 'denied';
+  status: "pending" | "approved" | "denied";
   request_date: string;
 }
 
@@ -48,7 +47,9 @@ const Index = () => {
   const [gpSurgery, setGPSurgery] = useState<GPSurgery | null>(null);
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
-  const [refillRequests, setRefillRequests] = useState<Record<string, RefillRequest>>({});
+  const [refillRequests, setRefillRequests] = useState<
+    Record<string, RefillRequest>
+  >({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -56,34 +57,36 @@ const Index = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const { data: { user } } = await supabase.auth.getUser();
-        
+        const {
+          data: { user },
+        } = await supabase.auth.getUser();
+
         if (!user) {
-          console.error('No user logged in');
+          console.error("No user logged in");
           return;
         }
 
         // Fetch profile
         const { data: profileData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
+          .from("profiles")
+          .select("*")
+          .eq("id", user.id)
           .single();
 
         if (profileData) setProfile(profileData);
 
         // For demo purposes, fetch first GP surgery and pharmacy
         const { data: gpData } = await supabase
-          .from('gp_surgeries')
-          .select('*')
+          .from("gp_surgeries")
+          .select("*")
           .limit(1)
           .single();
 
         if (gpData) setGPSurgery(gpData);
 
         const { data: pharmacyData } = await supabase
-          .from('pharmacies')
-          .select('*')
+          .from("pharmacies")
+          .select("*")
           .limit(1)
           .single();
 
@@ -91,28 +94,30 @@ const Index = () => {
 
         // Fetch prescriptions
         const { data: prescriptionsData } = await supabase
-          .from('prescriptions')
-          .select('*')
-          .eq('patient_id', user.id);
+          .from("prescriptions")
+          .select("*")
+          .eq("patient_id", user.id);
 
         if (prescriptionsData) setPrescriptions(prescriptionsData);
 
         // Fetch refill requests
         const { data: refillRequestsData } = await supabase
-          .from('refill_requests')
-          .select('*')
-          .eq('patient_id', user.id);
+          .from("refill_requests")
+          .select("*")
+          .eq("patient_id", user.id);
 
         if (refillRequestsData) {
-          const refillRequestsMap = refillRequestsData.reduce((acc, request) => ({
-            ...acc,
-            [request.prescription_id]: request
-          }), {});
+          const refillRequestsMap = refillRequestsData.reduce(
+            (acc, request) => ({
+              ...acc,
+              [request.prescription_id]: request,
+            }),
+            {}
+          );
           setRefillRequests(refillRequestsMap);
         }
-
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error("Error fetching data:", error);
       } finally {
         setLoading(false);
       }
@@ -124,9 +129,9 @@ const Index = () => {
   const handleSignOut = async () => {
     try {
       await supabase.auth.signOut();
-      navigate('/auth');
+      navigate("/auth");
     } catch (error) {
-      console.error('Error signing out:', error);
+      console.error("Error signing out:", error);
       toast({
         variant: "destructive",
         title: "Error signing out",
@@ -137,8 +142,10 @@ const Index = () => {
 
   const handleRefillRequest = async (prescriptionId: string) => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
       if (!user) {
         toast({
           variant: "destructive",
@@ -149,7 +156,7 @@ const Index = () => {
       }
 
       const { data, error } = await supabase
-        .from('refill_requests')
+        .from("refill_requests")
         .insert({
           prescription_id: prescriptionId,
           patient_id: user.id,
@@ -160,9 +167,9 @@ const Index = () => {
       if (error) throw error;
 
       if (data) {
-        setRefillRequests(prev => ({
+        setRefillRequests((prev) => ({
           ...prev,
-          [prescriptionId]: data
+          [prescriptionId]: data,
         }));
 
         toast({
@@ -171,7 +178,7 @@ const Index = () => {
         });
       }
     } catch (error) {
-      console.error('Error requesting refill:', error);
+      console.error("Error requesting refill:", error);
       toast({
         variant: "destructive",
         title: "Error",
@@ -220,10 +227,22 @@ const Index = () => {
               subtitle="Personal Information"
               content={
                 <div className="space-y-2">
-                  <p><span className="font-medium">Name:</span> {profile.first_name} {profile.last_name}</p>
-                  <p><span className="font-medium">DOB:</span> {profile.date_of_birth}</p>
-                  <p><span className="font-medium">NHS Number:</span> {profile.nhs_number}</p>
-                  <p><span className="font-medium">Address:</span> {profile.address}</p>
+                  <p>
+                    <span className="font-medium">Name:</span>{" "}
+                    {profile.first_name} {profile.last_name}
+                  </p>
+                  <p>
+                    <span className="font-medium">DOB:</span>{" "}
+                    {profile.date_of_birth}
+                  </p>
+                  <p>
+                    <span className="font-medium">NHS Number:</span>{" "}
+                    {profile.nhs_number}
+                  </p>
+                  <p>
+                    <span className="font-medium">Address:</span>{" "}
+                    {profile.address}
+                  </p>
                 </div>
               }
             />
@@ -235,9 +254,18 @@ const Index = () => {
               subtitle="Healthcare Provider"
               content={
                 <div className="space-y-2">
-                  <p><span className="font-medium">Practice:</span> {gpSurgery.name}</p>
-                  <p><span className="font-medium">Address:</span> {gpSurgery.address}</p>
-                  <p><span className="font-medium">Phone:</span> {gpSurgery.phone}</p>
+                  <p>
+                    <span className="font-medium">Practice:</span>{" "}
+                    {gpSurgery.name}
+                  </p>
+                  <p>
+                    <span className="font-medium">Address:</span>{" "}
+                    {gpSurgery.address}
+                  </p>
+                  <p>
+                    <span className="font-medium">Phone:</span>{" "}
+                    {gpSurgery.phone}
+                  </p>
                 </div>
               }
             />
@@ -249,10 +277,20 @@ const Index = () => {
               subtitle="Local Pharmacy"
               content={
                 <div className="space-y-2">
-                  <p><span className="font-medium">Name:</span> {pharmacy.name}</p>
-                  <p><span className="font-medium">Address:</span> {pharmacy.address}</p>
-                  <p><span className="font-medium">Phone:</span> {pharmacy.phone}</p>
-                  <p><span className="font-medium">Hours:</span> {pharmacy.opening_hours}</p>
+                  <p>
+                    <span className="font-medium">Name:</span> {pharmacy.name}
+                  </p>
+                  <p>
+                    <span className="font-medium">Address:</span>{" "}
+                    {pharmacy.address}
+                  </p>
+                  <p>
+                    <span className="font-medium">Phone:</span> {pharmacy.phone}
+                  </p>
+                  <p>
+                    <span className="font-medium">Hours:</span>{" "}
+                    {pharmacy.opening_hours}
+                  </p>
                 </div>
               }
             />
@@ -260,7 +298,9 @@ const Index = () => {
         </div>
 
         <div className="mt-8">
-          <h2 className="text-2xl font-semibold text-gray-900 mb-6">Current Prescriptions</h2>
+          <h2 className="text-2xl font-semibold text-gray-900 mb-6">
+            Current Prescriptions
+          </h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {prescriptions.map((prescription, index) => (
               <InfoCard
@@ -270,21 +310,36 @@ const Index = () => {
                 content={
                   <div className="space-y-4">
                     <div className="space-y-2">
-                      <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
-                      <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
-                      <p><span className="font-medium">Status:</span> {prescription.status}</p>
+                      <p>
+                        <span className="font-medium">Dosage:</span>{" "}
+                        {prescription.dosage}
+                      </p>
+                      <p>
+                        <span className="font-medium">Frequency:</span>{" "}
+                        {prescription.frequency}
+                      </p>
+                      <p>
+                        <span className="font-medium">Status:</span>{" "}
+                        {prescription.status}
+                      </p>
                     </div>
-                    {prescription.status === 'active' && (
+                    {prescription.status === "active" && (
                       <div>
                         {refillRequests[prescription.id] ? (
                           <div className="mt-2 text-sm">
                             <p className="font-medium text-gray-700">
-                              Refill Request Status: 
-                              <span className={`ml-1 ${
-                                refillRequests[prescription.id].status === 'pending' ? 'text-yellow-600' :
-                                refillRequests[prescription.id].status === 'approved' ? 'text-green-600' :
-                                'text-red-600'
-                              }`}>
+                              Refill Request Status:
+                              <span
+                                className={`ml-1 ${
+                                  refillRequests[prescription.id].status ===
+                                  "pending"
+                                    ? "text-yellow-600"
+                                    : refillRequests[prescription.id].status ===
+                                      "approved"
+                                    ? "text-green-600"
+                                    : "text-red-600"
+                                }`}
+                              >
                                 {refillRequests[prescription.id].status}
                               </span>
                             </p>
@@ -307,6 +362,7 @@ const Index = () => {
             ))}
           </div>
         </div>
+        
       </div>
     </div>
   );
