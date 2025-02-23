@@ -29,10 +29,18 @@ interface Pharmacy {
 }
 
 interface Prescription {
+  id: string;
   medication: string;
   dosage: string;
   frequency: string;
   status: string;
+}
+
+interface RefillRequest {
+  id: string;
+  prescription_id: string;
+  status: 'pending' | 'approved' | 'denied';
+  request_date: string;
 }
 
 const Index = () => {
@@ -40,6 +48,7 @@ const Index = () => {
   const [gpSurgery, setGPSurgery] = useState<GPSurgery | null>(null);
   const [pharmacy, setPharmacy] = useState<Pharmacy | null>(null);
   const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [refillRequests, setRefillRequests] = useState<Record<string, RefillRequest>>({});
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -88,6 +97,20 @@ const Index = () => {
 
         if (prescriptionsData) setPrescriptions(prescriptionsData);
 
+        // Fetch refill requests
+        const { data: refillRequestsData } = await supabase
+          .from('refill_requests')
+          .select('*')
+          .eq('patient_id', user.id);
+
+        if (refillRequestsData) {
+          const refillRequestsMap = refillRequestsData.reduce((acc, request) => ({
+            ...acc,
+            [request.prescription_id]: request
+          }), {});
+          setRefillRequests(refillRequestsMap);
+        }
+
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -108,6 +131,51 @@ const Index = () => {
         variant: "destructive",
         title: "Error signing out",
         description: "Please try again",
+      });
+    }
+  };
+
+  const handleRefillRequest = async (prescriptionId: string) => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        toast({
+          variant: "destructive",
+          title: "Error",
+          description: "You must be logged in to request a refill",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from('refill_requests')
+        .insert({
+          prescription_id: prescriptionId,
+          patient_id: user.id,
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (data) {
+        setRefillRequests(prev => ({
+          ...prev,
+          [prescriptionId]: data
+        }));
+
+        toast({
+          title: "Refill Requested",
+          description: "Your prescription refill request has been submitted.",
+        });
+      }
+    } catch (error) {
+      console.error('Error requesting refill:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to request refill. Please try again.",
       });
     }
   };
@@ -200,10 +268,37 @@ const Index = () => {
                 title={prescription.medication}
                 subtitle="Active Prescription"
                 content={
-                  <div className="space-y-2">
-                    <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
-                    <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
-                    <p><span className="font-medium">Status:</span> {prescription.status}</p>
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <p><span className="font-medium">Dosage:</span> {prescription.dosage}</p>
+                      <p><span className="font-medium">Frequency:</span> {prescription.frequency}</p>
+                      <p><span className="font-medium">Status:</span> {prescription.status}</p>
+                    </div>
+                    {prescription.status === 'active' && (
+                      <div>
+                        {refillRequests[prescription.id] ? (
+                          <div className="mt-2 text-sm">
+                            <p className="font-medium text-gray-700">
+                              Refill Request Status: 
+                              <span className={`ml-1 ${
+                                refillRequests[prescription.id].status === 'pending' ? 'text-yellow-600' :
+                                refillRequests[prescription.id].status === 'approved' ? 'text-green-600' :
+                                'text-red-600'
+                              }`}>
+                                {refillRequests[prescription.id].status}
+                              </span>
+                            </p>
+                          </div>
+                        ) : (
+                          <Button
+                            onClick={() => handleRefillRequest(prescription.id)}
+                            className="w-full"
+                          >
+                            Request Refill
+                          </Button>
+                        )}
+                      </div>
+                    )}
                   </div>
                 }
                 className="animate-fadeIn"

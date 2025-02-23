@@ -132,6 +132,57 @@ export type Database = {
         }
         Relationships: []
       }
+      refill_requests: {
+        Row: {
+          created_at: string | null
+          id: string
+          notes: string | null
+          patient_id: string
+          prescription_id: string
+          processed_date: string | null
+          request_date: string | null
+          status: Database["public"]["Enums"]["refill_request_status"]
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id: string
+          prescription_id: string
+          processed_date?: string | null
+          request_date?: string | null
+          status?: Database["public"]["Enums"]["refill_request_status"]
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          notes?: string | null
+          patient_id?: string
+          prescription_id?: string
+          processed_date?: string | null
+          request_date?: string | null
+          status?: Database["public"]["Enums"]["refill_request_status"]
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refill_requests_patient_id_fkey"
+            columns: ["patient_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refill_requests_prescription_id_fkey"
+            columns: ["prescription_id"]
+            isOneToOne: false
+            referencedRelation: "prescriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -141,6 +192,7 @@ export type Database = {
     }
     Enums: {
       prescription_status: "active" | "completed" | "cancelled"
+      refill_request_status: "pending" | "approved" | "denied"
     }
     CompositeTypes: {
       [_ in never]: never
