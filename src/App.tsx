@@ -8,10 +8,12 @@ import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import NotFound from "./pages/NotFound";
 import ElevenLabsWidget from "./components/ElevenLabsWidget";
+import { useSupabaseUser } from "./hooks/useSupabaseUser";
 
 const queryClient = new QueryClient();
 
-const App = () => (
+const App = () => {
+  const { user } = useSupabaseUser();
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Toaster />
@@ -25,7 +27,7 @@ const App = () => (
               element={
                 <RequireAuth>
                   <Index />
-                  <ElevenLabsWidget />
+                  <ElevenLabsWidget userId={user.id} />
                 </RequireAuth>
               }
             />
@@ -34,7 +36,7 @@ const App = () => (
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
-  </QueryClientProvider>
-);
+  </QueryClientProvider>;
+};
 
 export default App;
