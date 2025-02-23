@@ -13,30 +13,41 @@ import { useSupabaseUser } from "./hooks/useSupabaseUser";
 const queryClient = new QueryClient();
 
 const App = () => {
-  const { user } = useSupabaseUser();
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/"
-              element={
-                <RequireAuth>
-                  <Index />
-                  <ElevenLabsWidget userId={user.id} />
-                </RequireAuth>
-              }
-            />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>;
+  const { user, loading } = useSupabaseUser();
+
+  if (loading) {
+    return <div>Loading...</div>; // Show loading message while fetching user data
+  }
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route
+                path="/"
+                element={
+                  <RequireAuth>
+                    <Index />
+                    {user ? (
+                      <ElevenLabsWidget userId={user.id} />
+                    ) : (
+                      <p>Loading user...</p>
+                    )}
+                  </RequireAuth>
+                }
+              />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </QueryClientProvider>
+  );
 };
 
 export default App;

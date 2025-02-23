@@ -6,8 +6,11 @@ export const useSupabaseUser = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    console.log("useSupabaseUser");
     const fetchUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
 
       if (session) {
         setUser(session.user); // Store the user object
