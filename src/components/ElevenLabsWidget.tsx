@@ -19,7 +19,7 @@ function ElevenLabsWidget() {
   return (
     <div>
       {/* The custom ElevenLabs element */}
-      <elevenlabs-convai agent-id="oteOQYnH3OJ7l5JGpdPT"></elevenlabs-convai>
+      <elevenlabs-convai agent-id="8pkVgwjpCRqjsfbGte5P"></elevenlabs-convai>
     </div>
   );
 }
