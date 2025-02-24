@@ -13,10 +13,12 @@ export const useSupabaseUser = () => {
         data: { session },
       } = await supabase.auth.getSession();
 
-      console.log("Initial session:", session);
+      console.log("Initial session:", session, "User:", session?.user);
 
       if (session) {
         setUser(session.user);
+      } else {
+        console.log("ERROR: No active session");
       }
 
       setLoading(false);
