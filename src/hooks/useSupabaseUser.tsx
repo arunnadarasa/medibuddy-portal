@@ -35,7 +35,7 @@ export const useSupabaseUser = () => {
     return () => {
       subscription.unsubscribe(); // Cleanup on unmount
     };
-  }, []);
+  }, [user]);
 
   console.log("Returning user:", user);
   return { user, loading };
